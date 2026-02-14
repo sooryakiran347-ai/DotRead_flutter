@@ -2,6 +2,11 @@ import 'package:braille/screens/screen2.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
+import 'package:wifi_iot/wifi_iot.dart';
+import 'package:http/http.dart' as http;
+import 'package:permission_handler/permission_handler.dart';
+
+
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -12,6 +17,55 @@ class Homepage extends StatefulWidget {
 
 class _HomepageState extends State<Homepage> {
   bool _isLoading = false; // For the Connect button loading
+
+  Future<void> connectToESP() async {
+  // Step 1: Connect to ESP Wi-Fi
+  final connected = await WiFiForIoTPlugin.connect(
+    "DotRead_ESP",
+    password: "12345678",
+    security: NetworkSecurity.WPA,
+    joinOnce: true,
+  );
+
+  if (!connected) {
+    throw Exception("Wi-Fi connection failed");
+  }
+
+  // Step 2: Wait for network switch
+  await Future.delayed(const Duration(seconds: 2));
+
+  // Step 3: Send connect command to ESP
+  final response =
+      await http.get(Uri.parse("http://192.168.4.1/connect"))
+          .timeout(const Duration(seconds: 5));
+
+  if (response.statusCode != 200) {
+    throw Exception("ESP not responding");
+  }
+}
+
+@override
+void initState() {
+  super.initState();
+  requestLocationPermission();
+}
+
+Future<void> requestLocationPermission() async {
+  final status = await Permission.location.request();
+
+  if (!status.isGranted && mounted) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Location permission required for Wi-Fi"),
+        ),
+      );
+    });
+  }
+}
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -39,25 +93,30 @@ class _HomepageState extends State<Homepage> {
                 width: 200,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: _isLoading
-                      ? null
-                      : () {
-                          setState(() {
-                            _isLoading = true;
-                          });
+                 onPressed: _isLoading
+    ? null
+    : () async {
+        setState(() => _isLoading = true);
 
-                          // Simulate loading for 2 seconds
-                          Timer(const Duration(seconds: 2), () {
-                            setState(() {
-                              _isLoading = false;
-                            });
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const MainScreen()),
-                            );
-                          });
-                        },
+        try {
+          await connectToESP();
+
+          if (!mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const MainScreen(),
+            ),
+          );
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Connection failed")),
+          );
+        }
+
+        setState(() => _isLoading = false);
+      },
+
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: const Color.fromARGB(255, 11, 61, 57),
