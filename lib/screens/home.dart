@@ -6,8 +6,6 @@ import 'package:wifi_iot/wifi_iot.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 
-
-
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
 
@@ -16,56 +14,54 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
-  bool _isLoading = false; // For the Connect button loading
+  bool _isLoading = false;
 
-  Future<void> connectToESP() async {
-  // Step 1: Connect to ESP Wi-Fi
-  final connected = await WiFiForIoTPlugin.connect(
-    "Thaksheel",
-    password: "12345678",
-    security: NetworkSecurity.WPA,
-    joinOnce: true,
-  );
+  // 🔹 ESP hostname (common host)
+  static const String espHost = "192.168.4.1";
 
-  if (!connected) {
-    throw Exception("Wi-Fi connection failed");
+  @override
+  void initState() {
+    super.initState();
+    requestLocationPermission();
   }
 
-  // Step 2: Wait for network switch
-  await Future.delayed(const Duration(seconds: 2));
+  // 🔹 Location permission (required for Wi-Fi scanning)
+  Future<void> requestLocationPermission() async {
+    final status = await Permission.location.request();
 
-  // Step 3: Send connect command to ESP
-  final response =
-      await http.get(Uri.parse("http://192.168.4.1/connect"))
-          .timeout(const Duration(seconds: 5));
-
-  if (response.statusCode != 200) {
-    throw Exception("ESP not responding");
-  }
-}
-
-@override
-void initState() {
-  super.initState();
-  requestLocationPermission();
-}
-
-Future<void> requestLocationPermission() async {
-  final status = await Permission.location.request();
-
-  if (!status.isGranted && mounted) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!status.isGranted && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Location permission required for Wi-Fi"),
-        ),
+        const SnackBar(content: Text("Location permission required for Wi-Fi")),
       );
-    });
+    }
   }
-}
 
+  // 🔹 Connect to ESP Wi-Fi + send HTTP request
+  Future<void> connectToESP() async {
+    // Step 1: Connect to ESP access point
+    final connected = await WiFiForIoTPlugin.connect(
+      "Gopu",
+      password: "12345678",
+      security: NetworkSecurity.WPA,
+      joinOnce: true,
+    );
 
+    if (!connected) {
+      throw Exception("Wi-Fi connection failed");
+    }
 
+    // Step 2: Allow time for network switch
+    await Future.delayed(const Duration(seconds: 2));
+
+    // Step 3: Call ESP using common hostname
+    final response = await http
+        .get(Uri.parse("http://$espHost/connect"))
+        .timeout(const Duration(seconds: 5));
+
+    if (response.statusCode != 200) {
+      throw Exception("ESP not responding");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +72,7 @@ Future<void> requestLocationPermission() async {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Title
+              // 🔹 Title
               Text(
                 "Dot Read",
                 style: GoogleFonts.ruthie(
@@ -88,35 +84,36 @@ Future<void> requestLocationPermission() async {
               ),
               const SizedBox(height: 30),
 
-              // Connect Button with Braille Loading
+              // 🔹 Connect Button
               SizedBox(
                 width: 200,
                 height: 55,
                 child: ElevatedButton(
-                 onPressed: _isLoading
-    ? null
-    : () async {
-        setState(() => _isLoading = true);
+                  onPressed: _isLoading
+                      ? null
+                      : () async {
+                          setState(() => _isLoading = true);
 
-        try {
-          await connectToESP();
+                          try {
+                            await connectToESP();
 
-          if (!mounted) return;
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const MainScreen(),
-            ),
-          );
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Connection failed")),
-          );
-        }
+                            if (!mounted) return;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const MainScreen(),
+                              ),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Error: $e")),
+                            );
+                          }
 
-        setState(() => _isLoading = false);
-      },
-
+                          if (mounted) {
+                            setState(() => _isLoading = false);
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: const Color.fromARGB(255, 11, 61, 57),
@@ -126,7 +123,7 @@ Future<void> requestLocationPermission() async {
                     elevation: 4,
                   ),
                   child: _isLoading
-                      ? const BrailleLoading() // Show Braille animation
+                      ? const BrailleLoading()
                       : Text(
                           "Connect",
                           style: GoogleFonts.poppins(
@@ -145,33 +142,37 @@ Future<void> requestLocationPermission() async {
   }
 }
 
-// ------------------ Braille Loading Animation ------------------
+// ================= Braille Loading Animation =================
 
 class BrailleLoading extends StatefulWidget {
   const BrailleLoading({super.key});
 
   @override
-  _BrailleLoadingState createState() => _BrailleLoadingState();
+  State<BrailleLoading> createState() => _BrailleLoadingState();
 }
 
 class _BrailleLoadingState extends State<BrailleLoading>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _animation1, _animation2, _animation3;
+  late Animation<double> _a1, _a2, _a3;
 
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: const Duration(seconds: 1))
-          ..repeat();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat();
 
-    _animation1 = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: _controller, curve: const Interval(0, 0.3)));
-    _animation2 = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.6)));
-    _animation3 = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: _controller, curve: const Interval(0.6, 1)));
+    _a1 = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0, 0.3)),
+    );
+    _a2 = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.6)),
+    );
+    _a3 = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.6, 1)),
+    );
   }
 
   @override
@@ -181,9 +182,9 @@ class _BrailleLoadingState extends State<BrailleLoading>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          FadeTransition(opacity: _animation1, child: const Dot()),
-          FadeTransition(opacity: _animation2, child: const Dot()),
-          FadeTransition(opacity: _animation3, child: const Dot()),
+          FadeTransition(opacity: _a1, child: const Dot()),
+          FadeTransition(opacity: _a2, child: const Dot()),
+          FadeTransition(opacity: _a3, child: const Dot()),
         ],
       ),
     );
@@ -196,7 +197,7 @@ class _BrailleLoadingState extends State<BrailleLoading>
   }
 }
 
-// ------------------ Dot Widget ------------------
+// ================= Dot =================
 
 class Dot extends StatelessWidget {
   const Dot({super.key});
@@ -213,4 +214,3 @@ class Dot extends StatelessWidget {
     );
   }
 }
-// new changes
