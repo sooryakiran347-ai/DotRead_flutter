@@ -67,7 +67,7 @@ class _HomepageState extends State<Homepage> {
                     elevation: 4,
                   ),
                   child: _isLoading
-                      ? const BrailleLoading() // Show Braille animation
+                      ? const BrailleLoading() 
                       : Text(
                           "Connect",
                           style: GoogleFonts.poppins(
@@ -86,7 +86,7 @@ class _HomepageState extends State<Homepage> {
   }
 }
 
-// ------------------ Braille Loading Animation ------------------
+
 
 class BrailleLoading extends StatefulWidget {
   const BrailleLoading({super.key});
