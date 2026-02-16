@@ -21,7 +21,7 @@ class _HomepageState extends State<Homepage> {
   Future<void> connectToESP() async {
   // Step 1: Connect to ESP Wi-Fi
   final connected = await WiFiForIoTPlugin.connect(
-    "DotRead_ESP",
+    "Thaksheel",
     password: "12345678",
     security: NetworkSecurity.WPA,
     joinOnce: true,

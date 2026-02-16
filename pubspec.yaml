@@ -33,6 +33,8 @@ dependencies:
   google_fonts: ^6.2.1
   http: ^1.2.0
   wifi_iot: ^0.3.18
+  flutter_bluetooth_serial: ^0.4.0
+
   permission_handler: ^11.3.1
 
 
