@@ -33,6 +33,9 @@ dependencies:
   google_fonts: ^6.2.1
   http: ^1.2.0
   wifi_iot: ^0.3.18
+  flutter_blue_plus: ^1.32.0
+  permission_handler: ^11.3.0
+
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
