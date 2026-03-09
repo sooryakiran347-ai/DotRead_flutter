@@ -33,8 +33,11 @@ dependencies:
   google_fonts: ^6.2.1
   http: ^1.2.0
   wifi_iot: ^0.3.18
+<<<<<<< HEAD
   flutter_blue_plus: ^1.32.0
   permission_handler: ^11.3.0
+=======
+>>>>>>> experiment
 
 
   # The following adds the Cupertino Icons font to your application.
