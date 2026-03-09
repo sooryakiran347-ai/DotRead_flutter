@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'home.dart'; // for brailleCharacteristic
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -12,51 +13,37 @@ class _MainScreenState extends State<MainScreen> {
   final TextEditingController _inputController = TextEditingController();
   String _brailleOutput = "";
 
+  // Braille display (UNICODE – UI only)
   final Map<String, String> _brailleMap = {
-    "a": "\u2801",
-    "b": "\u2803",
-    "c": "\u2809",
-    "d": "\u2819",
-    "e": "\u2811",
-    "f": "\u280B",
-    "g": "\u281B",
-    "h": "\u2813",
-    "i": "\u280A",
-    "j": "\u281A",
-    "k": "\u2805",
-    "l": "\u2807",
-    "m": "\u280D",
-    "n": "\u281D",
-    "o": "\u2815",
-    "p": "\u280F",
-    "q": "\u281F",
-    "r": "\u2817",
-    "s": "\u280E",
-    "t": "\u281E",
-    "u": "\u2825",
-    "v": "\u2827",
-    "w": "\u283A",
-    "x": "\u282D",
-    "y": "\u283D",
-    "z": "\u2835",
-    " ": " ", // space
+    "a": "\u2801", "b": "\u2803", "c": "\u2809", "d": "\u2819",
+    "e": "\u2811", "f": "\u280B", "g": "\u281B", "h": "\u2813",
+    "i": "\u280A", "j": "\u281A", "k": "\u2805", "l": "\u2807",
+    "m": "\u280D", "n": "\u281D", "o": "\u2815", "p": "\u280F",
+    "q": "\u281F", "r": "\u2817", "s": "\u280E", "t": "\u281E",
+    "u": "\u2825", "v": "\u2827", "w": "\u283A", "x": "\u282D",
+    "y": "\u283D", "z": "\u2835", " ": " ",
   };
 
-  // Convert input text to Braille
   String _convertToBraille(String text) {
     String result = "";
-    for (var char in text.toLowerCase().split('')) {
-      result += _brailleMap[char] ?? "?";
+    for (var c in text.toLowerCase().split('')) {
+      result += _brailleMap[c] ?? "?";
     }
     return result;
   }
 
-  // Called when Enter button is pressed
-  void _onEnterPressed() {
+  // SEND RAW CHARACTERS TO ESP32
+  void _onEnterPressed() async {
+    final text = _inputController.text;
+
     setState(() {
-      _brailleOutput = _convertToBraille(_inputController.text);
-      // _inputController.clear(); // clear input after translation
+      _brailleOutput = _convertToBraille(text);
     });
+
+    if (brailleCharacteristic != null) {
+      await brailleCharacteristic!
+          .write(text.codeUnits, withoutResponse: false);
+    }
   }
 
   @override
@@ -66,38 +53,25 @@ class _MainScreenState extends State<MainScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(20),
             child: Column(
               children: [
                 const SizedBox(height: 30),
 
-                // Input box
                 TextField(
                   controller: _inputController,
                   decoration: InputDecoration(
                     labelText: "Enter Text",
                     filled: true,
                     fillColor: Colors.white,
-                    labelStyle: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade400),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                          color: Color.fromARGB(255, 11, 61, 57), width: 2),
-                    ),
                   ),
-                  style: const TextStyle(color: Colors.black),
                 ),
 
                 const SizedBox(height: 20),
 
-                // Output box
                 Container(
                   width: double.infinity,
                   constraints: BoxConstraints(
@@ -108,43 +82,24 @@ class _MainScreenState extends State<MainScreen> {
                   decoration: BoxDecoration(
                     color: const Color.fromARGB(255, 230, 230, 230),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade400),
                   ),
-                  child: SingleChildScrollView(
-                    child: Text(
-                      _brailleOutput,
-                      style: GoogleFonts.robotoMono(
-                        fontSize: 30,
-                        letterSpacing: 2,
-                        height: 1.5,
-                      ),
+                  child: Text(
+                    _brailleOutput,
+                    style: GoogleFonts.robotoMono(
+                      fontSize: 30,
+                      letterSpacing: 2,
                     ),
                   ),
                 ),
 
                 const SizedBox(height: 30),
 
-                // Enter button
                 SizedBox(
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
                     onPressed: _onEnterPressed,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor:
-                          const Color.fromARGB(255, 11, 61, 57),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child:  Text(
-                      "Enter",
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: const Text("Enter"),
                   ),
                 ),
               ],
