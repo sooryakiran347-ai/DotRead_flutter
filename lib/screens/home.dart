@@ -2,18 +2,11 @@ import 'dart:async';
 import 'package:braille/screens/screen2.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-<<<<<<< HEAD
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-// 🔹 GLOBAL CHARACTERISTIC (USED IN screen2.dart)
+// GLOBAL CHARACTERISTIC (USED IN screen2.dart)
 BluetoothCharacteristic? brailleCharacteristic;
-=======
-import 'dart:async';
-import 'package:wifi_iot/wifi_iot.dart';
-import 'package:http/http.dart' as http;
-import 'package:permission_handler/permission_handler.dart';
->>>>>>> experiment
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -24,17 +17,16 @@ class Homepage extends StatefulWidget {
 
 class _HomepageState extends State<Homepage> {
   bool _isLoading = false;
-<<<<<<< HEAD
   BluetoothDevice? connectedDevice;
   StreamSubscription? scanSubscription;
 
-  // 🔹 UUIDs (MUST MATCH ESP32)
+  // UUIDs (MUST MATCH ESP32)
   final Guid serviceUuid =
       Guid("12345678-1234-1234-1234-123456789abc");
   final Guid characteristicUuid =
       Guid("abcdef01-1234-1234-1234-123456789abc");
 
-  // ------------------ PERMISSIONS ------------------
+  // ---------------- PERMISSIONS ----------------
 
   Future<bool> _requestPermissions() async {
     final statuses = await [
@@ -46,7 +38,7 @@ class _HomepageState extends State<Homepage> {
     return statuses.values.every((status) => status.isGranted);
   }
 
-  // ------------------ BLE CONNECT ------------------
+  // ---------------- BLE CONNECT ----------------
 
   Future<void> _connectToESP32() async {
     setState(() => _isLoading = true);
@@ -88,7 +80,7 @@ class _HomepageState extends State<Homepage> {
     });
   }
 
-  // ------------------ DISCOVER SERVICES ------------------
+  // ---------------- DISCOVER SERVICES ----------------
 
   Future<void> _discoverServices() async {
     List<BluetoothService> services =
@@ -115,56 +107,7 @@ class _HomepageState extends State<Homepage> {
     super.dispose();
   }
 
-  // ------------------ UI (UNCHANGED) ------------------
-=======
-
-  // 🔹 ESP hostname (common host)
-  static const String espHost = "192.168.4.1";
-
-  @override
-  void initState() {
-    super.initState();
-    requestLocationPermission();
-  }
-
-  // 🔹 Location permission (required for Wi-Fi scanning)
-  Future<void> requestLocationPermission() async {
-    final status = await Permission.location.request();
-
-    if (!status.isGranted && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Location permission required for Wi-Fi")),
-      );
-    }
-  }
-
-  // 🔹 Connect to ESP Wi-Fi + send HTTP request
-  Future<void> connectToESP() async {
-    // Step 1: Connect to ESP access point
-    final connected = await WiFiForIoTPlugin.connect(
-      "Gopu",
-      password: "12345678",
-      security: NetworkSecurity.WPA,
-      joinOnce: true,
-    );
-
-    if (!connected) {
-      throw Exception("Wi-Fi connection failed");
-    }
-
-    // Step 2: Allow time for network switch
-    await Future.delayed(const Duration(seconds: 2));
-
-    // Step 3: Call ESP using common hostname
-    final response = await http
-        .get(Uri.parse("http://$espHost/connect"))
-        .timeout(const Duration(seconds: 5));
-
-    if (response.statusCode != 200) {
-      throw Exception("ESP not responding");
-    }
-  }
->>>>>>> experiment
+  // ---------------- UI ----------------
 
   @override
   Widget build(BuildContext context) {
@@ -175,10 +118,6 @@ class _HomepageState extends State<Homepage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-<<<<<<< HEAD
-=======
-              // 🔹 Title
->>>>>>> experiment
               Text(
                 "Dot Read",
                 style: GoogleFonts.ruthie(
@@ -190,10 +129,6 @@ class _HomepageState extends State<Homepage> {
               ),
               const SizedBox(height: 30),
 
-<<<<<<< HEAD
-=======
-              // 🔹 Connect Button
->>>>>>> experiment
               SizedBox(
                 width: 200,
                 height: 55,
@@ -201,35 +136,11 @@ class _HomepageState extends State<Homepage> {
                   onPressed: _isLoading
                       ? null
                       : () async {
-<<<<<<< HEAD
                           bool granted =
                               await _requestPermissions();
                           if (!granted) return;
 
                           await _connectToESP32();
-=======
-                          setState(() => _isLoading = true);
-
-                          try {
-                            await connectToESP();
-
-                            if (!mounted) return;
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const MainScreen(),
-                              ),
-                            );
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Error: $e")),
-                            );
-                          }
-
-                          if (mounted) {
-                            setState(() => _isLoading = false);
-                          }
->>>>>>> experiment
                         },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
@@ -241,11 +152,7 @@ class _HomepageState extends State<Homepage> {
                     ),
                   ),
                   child: _isLoading
-<<<<<<< HEAD
-                      ? const CircularProgressIndicator()
-=======
                       ? const BrailleLoading()
->>>>>>> experiment
                       : Text(
                           "Connect",
                           style: GoogleFonts.poppins(
@@ -261,9 +168,6 @@ class _HomepageState extends State<Homepage> {
       ),
     );
   }
-<<<<<<< HEAD
-}
-=======
 }
 
 // ================= Braille Loading Animation =================
@@ -321,8 +225,6 @@ class _BrailleLoadingState extends State<BrailleLoading>
   }
 }
 
-// ================= Dot =================
-
 class Dot extends StatelessWidget {
   const Dot({super.key});
 
@@ -338,4 +240,3 @@ class Dot extends StatelessWidget {
     );
   }
 }
->>>>>>> experiment
